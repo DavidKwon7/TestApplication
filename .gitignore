@@ -197,4 +197,6 @@ fabric.properties
 
 !/gradle/wrapper/gradle-wrapper.jar
 
-# End of https://www.toptal.com/developers/gitignore/api/androidstudio,android,java,kotlin.claude/settings.local.json
+.claude/settings.local.json
+
+# End of https://www.toptal.com/developers/gitignore/api/androidstudio,android,java,kotlin
