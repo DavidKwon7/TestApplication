@@ -13,7 +13,6 @@ import kotlinx.coroutines.test.runTest
 import kotlinx.coroutines.test.setMain
 import org.junit.After
 import org.junit.Assert.assertEquals
-import org.junit.Assert.assertFalse
 import org.junit.Assert.assertTrue
 import org.junit.Before
 import org.junit.Test
@@ -41,29 +40,29 @@ class SpringAppViewModelTest {
     // ── 초기 상태 ──────────────────────────────────────────────────────────────
 
     @Test
-    fun `초기 musicUiState는 Loading이다`() = runTest {
-        val viewModel = SpringAppViewModel(
-            kmaRepository = FakeKmaRepository(),
-            lastFmRepository = FakeLastFmRepository(shouldFail = true)
-        )
-
-        assertEquals(MusicUiState.Loading, viewModel.musicUiState.value)
-    }
-
-    @Test
-    fun `초기 isLoading은 false이다`() {
+    fun `초기 blossomUiState는 Loading이다`() = runTest(testDispatcher) {
         val viewModel = SpringAppViewModel(
             kmaRepository = FakeKmaRepository(),
             lastFmRepository = FakeLastFmRepository()
         )
 
-        assertFalse(viewModel.isLoading.value)
+        assertEquals(BlossomUiState.Loading, viewModel.blossomUiState.value)
+    }
+
+    @Test
+    fun `초기 musicUiState는 Loading이다`() = runTest(testDispatcher) {
+        val viewModel = SpringAppViewModel(
+            kmaRepository = FakeKmaRepository(),
+            lastFmRepository = FakeLastFmRepository()
+        )
+
+        assertEquals(MusicUiState.Loading, viewModel.musicUiState.value)
     }
 
     // ── 벚꽃 데이터 로딩 ──────────────────────────────────────────────────────
 
     @Test
-    fun `벚꽃 데이터 로드 성공 시 blossomList가 채워진다`() = runTest {
+    fun `벚꽃 데이터 로드 성공 시 blossomUiState가 Success가 된다`() = runTest(testDispatcher) {
         val fakeData = listOf(
             CherryBlossomInfo("제주", 33.4996, 126.5312, "03-25", "04-01", "개화 전")
         )
@@ -74,25 +73,27 @@ class SpringAppViewModelTest {
 
         advanceUntilIdle()
 
-        assertEquals(fakeData, viewModel.blossomList.value)
+        val state = viewModel.blossomUiState.value
+        assertTrue(state is BlossomUiState.Success)
+        assertEquals(fakeData, (state as BlossomUiState.Success).list)
     }
 
     @Test
-    fun `벚꽃 데이터 로드 완료 후 isLoading은 false가 된다`() = runTest {
+    fun `벚꽃 데이터 로드 실패 시 blossomUiState가 Error가 된다`() = runTest(testDispatcher) {
         val viewModel = SpringAppViewModel(
-            kmaRepository = FakeKmaRepository(),
+            kmaRepository = FakeKmaRepository(shouldFail = true),
             lastFmRepository = FakeLastFmRepository()
         )
 
         advanceUntilIdle()
 
-        assertFalse(viewModel.isLoading.value)
+        assertTrue(viewModel.blossomUiState.value is BlossomUiState.Error)
     }
 
     // ── 음악 차트 로딩 ────────────────────────────────────────────────────────
 
     @Test
-    fun `음악 차트 로드 성공 시 musicUiState가 Success가 된다`() = runTest {
+    fun `음악 차트 로드 성공 시 musicUiState가 Success가 된다`() = runTest(testDispatcher) {
         val fakeChart = listOf(
             MusicChartItem(rank = 1, title = "봄봄봄", artist = "로이킴", coverUrl = "")
         )
@@ -109,7 +110,7 @@ class SpringAppViewModelTest {
     }
 
     @Test
-    fun `음악 차트 로드 실패 시 musicUiState가 Error가 된다`() = runTest {
+    fun `음악 차트 로드 실패 시 musicUiState가 Error가 된다`() = runTest(testDispatcher) {
         val viewModel = SpringAppViewModel(
             kmaRepository = FakeKmaRepository(),
             lastFmRepository = FakeLastFmRepository(shouldFail = true)
@@ -123,15 +124,19 @@ class SpringAppViewModelTest {
     // ── Fake 구현체 ───────────────────────────────────────────────────────────
 
     private class FakeKmaRepository(
-        private val data: List<CherryBlossomInfo> = emptyList()
-    ) : KmaRepository() {
-        override suspend fun getBlossomData(): List<CherryBlossomInfo> = data
+        private val data: List<CherryBlossomInfo> = emptyList(),
+        private val shouldFail: Boolean = false
+    ) : KmaRepository {
+        override suspend fun getBlossomData(): List<CherryBlossomInfo> {
+            if (shouldFail) throw RuntimeException("네트워크 오류")
+            return data
+        }
     }
 
     private class FakeLastFmRepository(
         private val data: List<MusicChartItem> = emptyList(),
         private val shouldFail: Boolean = false
-    ) : LastFmRepository() {
+    ) : LastFmRepository {
         override suspend fun getTopTracks(): List<MusicChartItem> {
             if (shouldFail) throw RuntimeException("네트워크 오류")
             return data

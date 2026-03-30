@@ -6,18 +6,18 @@ import org.junit.Before
 import org.junit.Test
 
 /**
- * [KmaRepository] 단위 테스트.
+ * [KmaRepositoryImpl] 단위 테스트.
  *
  * 네트워크 없이 실행 가능한 CSV 파싱 로직과 정적 데이터를 검증합니다.
- * [KmaRepository.getBlossomData]의 실제 API 호출은 통합 테스트에서 다룹니다.
+ * [KmaRepositoryImpl.getBlossomData]의 실제 API 호출은 통합 테스트에서 다룹니다.
  */
 class KmaRepositoryTest {
 
-    private lateinit var repository: KmaRepository
+    private lateinit var repository: KmaRepositoryImpl
 
     @Before
     fun setUp() {
-        repository = KmaRepository()
+        repository = KmaRepositoryImpl()
     }
 
     // ── formatDate ────────────────────────────────────────────────────────────

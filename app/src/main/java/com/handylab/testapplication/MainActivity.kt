@@ -89,7 +89,7 @@ fun MainScreen(viewModel: SpringAppViewModel) {
             startDestination = Screen.Home.route,
             modifier = Modifier.padding(innerPadding)
         ) {
-            composable(Screen.Home.route) { HomeScreen(viewModel) }
+            composable(Screen.Home.route) { HomeScreen() }
             composable(Screen.Map.route) { MapScreen(viewModel) }
             composable(Screen.Music.route) { MusicScreen(viewModel) }
         }

@@ -10,18 +10,18 @@ import org.junit.Before
 import org.junit.Test
 
 /**
- * [LastFmRepository] 단위 테스트.
+ * [LastFmRepositoryImpl] 단위 테스트.
  *
- * 네트워크 없이 실행 가능한 트랙 변환 로직([LastFmRepository.mapToChartItem])을 검증합니다.
- * 실제 API 호출([LastFmRepository.getTopTracks])은 통합 테스트에서 다룹니다.
+ * 네트워크 없이 실행 가능한 트랙 변환 로직([LastFmRepositoryImpl.mapToChartItem])을 검증합니다.
+ * 실제 API 호출([LastFmRepositoryImpl.getTopTracks])은 통합 테스트에서 다룹니다.
  */
 class LastFmRepositoryTest {
 
-    private lateinit var repository: LastFmRepository
+    private lateinit var repository: LastFmRepositoryImpl
 
     @Before
     fun setUp() {
-        repository = LastFmRepository()
+        repository = LastFmRepositoryImpl()
     }
 
     // ── 앨범 커버 URL 처리 ─────────────────────────────────────────────────────

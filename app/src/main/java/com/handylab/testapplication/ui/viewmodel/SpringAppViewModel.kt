@@ -5,9 +5,10 @@ import androidx.lifecycle.ViewModelProvider
 import androidx.lifecycle.viewModelScope
 import androidx.lifecycle.viewmodel.initializer
 import androidx.lifecycle.viewmodel.viewModelFactory
-import com.handylab.testapplication.data.model.CherryBlossomInfo
 import com.handylab.testapplication.data.repository.KmaRepository
+import com.handylab.testapplication.data.repository.KmaRepositoryImpl
 import com.handylab.testapplication.data.repository.LastFmRepository
+import com.handylab.testapplication.data.repository.LastFmRepositoryImpl
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
@@ -23,21 +24,17 @@ import kotlinx.coroutines.launch
  * @param lastFmRepository 음악 차트 데이터 소스
  */
 class SpringAppViewModel(
-    private val kmaRepository: KmaRepository = KmaRepository(),
-    private val lastFmRepository: LastFmRepository = LastFmRepository()
+    private val kmaRepository: KmaRepository = KmaRepositoryImpl(),
+    private val lastFmRepository: LastFmRepository = LastFmRepositoryImpl()
 ) : ViewModel() {
 
-    /** 벚꽃 개화 정보 목록. 지도 화면과 홈 화면에서 사용됩니다. */
-    private val _blossomList = MutableStateFlow<List<CherryBlossomInfo>>(emptyList())
-    val blossomList: StateFlow<List<CherryBlossomInfo>> = _blossomList.asStateFlow()
+    /** 벚꽃 개화 UI 상태. Loading → Success 또는 Error로 전환됩니다. */
+    private val _blossomUiState = MutableStateFlow<BlossomUiState>(BlossomUiState.Loading)
+    val blossomUiState: StateFlow<BlossomUiState> = _blossomUiState.asStateFlow()
 
     /** 음악 차트 UI 상태. Loading → Success 또는 Error로 전환됩니다. */
     private val _musicUiState = MutableStateFlow<MusicUiState>(MusicUiState.Loading)
     val musicUiState: StateFlow<MusicUiState> = _musicUiState.asStateFlow()
-
-    /** 벚꽃 데이터 로딩 중 여부. 홈 화면 로딩 인디케이터에 사용됩니다. */
-    private val _isLoading = MutableStateFlow(false)
-    val isLoading: StateFlow<Boolean> = _isLoading.asStateFlow()
 
     init {
         fetchBlossomData()
@@ -47,9 +44,13 @@ class SpringAppViewModel(
     /** 기상청 API에서 벚꽃 개화 데이터를 가져옵니다. API 실패 시 정적 데이터를 사용합니다. */
     private fun fetchBlossomData() {
         viewModelScope.launch {
-            _isLoading.value = true
-            _blossomList.value = kmaRepository.getBlossomData()
-            _isLoading.value = false
+            _blossomUiState.value = BlossomUiState.Loading
+            try {
+                val list = kmaRepository.getBlossomData()
+                _blossomUiState.value = BlossomUiState.Success(list)
+            } catch (e: Exception) {
+                _blossomUiState.value = BlossomUiState.Error("벚꽃 데이터를 불러오지 못했습니다.\n(에러: ${e.localizedMessage})")
+            }
         }
     }
 
@@ -65,7 +66,6 @@ class SpringAppViewModel(
                 val chart = lastFmRepository.getTopTracks()
                 _musicUiState.value = MusicUiState.Success(chart)
             } catch (e: Exception) {
-                e.printStackTrace()
                 _musicUiState.value = MusicUiState.Error("음악 차트를 불러오지 못했습니다.\n(에러: ${e.localizedMessage})")
             }
         }
